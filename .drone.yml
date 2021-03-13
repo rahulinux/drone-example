@@ -1,0 +1,32 @@
+kind: pipeline
+name: default
+
+steps:
+
+- name: Build
+  image: docker
+  volumes:
+  - name: docker_socket
+    path: "/var/run/docker.sock"
+  commands:
+  - docker build -t webapp_local .
+
+- name: Run tests
+  image: webapp_local
+  pull: if-not-exists
+  commands:
+  - export PYTHONPATH=$PYTHONPATH:$PWD
+  - cd test
+  - pip install -r requirements.txt
+  - python -m pytest test.py
+ when:
+  event:
+    - push
+
+# - name: Publish artifacts
+#
+
+volumes:
+- name: docker_socket
+  host:
+    path: /var/run/docker.sock
